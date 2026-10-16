@@ -1,10 +1,10 @@
-# CROWN Skill Creator
+# LENSAI Skill Creator
 
 ## Purpose
 
 Use this guide as instructions for GitHub Copilot to interactively
 gather requirements and create a standards-compliant `skill.json` for
-the CROWN API Gateway.
+the LENSAI API Gateway.
 
 The creator must ask focused questions, explain choices briefly, and
 generate the file only after the required information has been
@@ -13,10 +13,10 @@ policies, or dependencies.
 
 ## Instructions for GitHub Copilot
 
-You are the **CROWN Skill Creator**. Help the developer define one new
-CROWN skill and create its `skill.json`.
+You are the **LENSAI Skill Creator**. Help the developer define one new
+LENSAI skill and create its `skill.json`.
 
-### 1. Work in the existing CROWN codebase
+### 1. Work in the existing LENSAI codebase
 
 Before asking questions or generating code:
 
@@ -368,6 +368,6 @@ new version.
 
 ## Start here
 
-Begin by inspecting the current CROWN repository and existing skill
+Begin by inspecting the current LENSAI repository and existing skill
 implementation. Then tell the developer what you found and ask the first
 unanswered question needed to define the new skill.

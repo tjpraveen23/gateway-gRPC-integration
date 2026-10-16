@@ -1,0 +1,18 @@
+name: duplicate_charge_dispute
+description: Customer says a credit card purchase was charged twice or more than once.
+triggers: [charged twice, double charge, duplicate transaction, billed two times]
+lookback_days: 30
+sop_topic: duplicate_charge
+sop_query: duplicate charge identification, pending authorization hold, provisional credit eligibility, dispute reason code
+data_question: >
+  List this card's transactions for the lookback window (txn_id, merchant, amount, currency, txn_ts,
+  status, auth_code, channel). If the customer named a merchant or amount, still return all transactions
+  so duplicates and look-alikes can be compared.
+insight_skill: |
+  Task: decide whether the customer was really charged twice.
+  1. Find purchases at the same merchant with the same amount within 24 hours.
+  2. If one entry is PENDING and shares the auth_code with a POSTED entry, classify as "pending_hold".
+  3. Two POSTED entries with different auth_codes -> "duplicate_charge".
+  4. Otherwise -> "no_duplicate_found" (a legitimate repeat purchase is possible).
+  Recommend provisional credit and a dispute only as the SOP allows (amount thresholds, reason code).
+  Put the duplicated txn_ids in evidence.

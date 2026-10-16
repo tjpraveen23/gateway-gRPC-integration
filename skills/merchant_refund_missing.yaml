@@ -1,0 +1,17 @@
+name: merchant_refund_missing
+description: Customer says a merchant promised or issued a refund that has not appeared on the credit card.
+triggers: [refund not received, merchant said they refunded me, return credit missing, where is my refund]
+lookback_days: 60
+sop_topic: refund
+sop_query: merchant refund posting timelines, credit not processed chargeback, documents required from the customer
+data_question: >
+  List this card's transactions for the lookback window (txn_id, merchant, amount, currency, txn_ts,
+  status, txn_type) including both purchases and refunds so the original purchase and any refund
+  credit can be matched.
+insight_skill: |
+  Task: determine the refund status.
+  1. Find the original purchase (merchant/amount from the message and entities).
+  2. Look for a REFUND with the same merchant and amount (or PENDING) after the purchase.
+  3. Compute days elapsed since the customer says the refund was issued (use the message; if unknown, say so).
+  4. Classify as "refund_posted", "refund_in_transit" (inside the SOP window) or "refund_overdue".
+  Recommend telling the customer the expected date, or a chargeback and required documents, only as the SOP allows.

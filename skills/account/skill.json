@@ -1,0 +1,23 @@
+{
+  "name": "account",
+  "domain": "customer_accounts",
+  "version": "1.0.0",
+  "version_history": [
+    {"version": "1.0.0", "date": "2026-10-16", "author": "architecture",
+     "changes": "Initial skill: all customer accounts, disputes and service requests via AccountService"}
+  ],
+  "description": "Pulls secondary reference information for the customer from the account backend: all accounts (credit card, checking, loan, ...), existing disputes including fraud disputes, and existing service requests.",
+  "required": false,
+  "requires": [],
+  "triggers": ["other accounts", "existing dispute", "open request", "fraud history", "loan account", "checking account"],
+  "inputs": ["customer_id", "account_number"],
+  "steps": [
+    {"id": "fetch_accounts", "call": "AccountService.GetCustomerAccounts",
+     "input": {"customer_id": "${customer_id}", "account_number": "${account_number}",
+               "info_types": ["accounts", "disputes", "requests"]},
+     "save_as": "result"}
+  ],
+  "outputs": {"account_json": "${result.result_json}"},
+  "fallback_outputs": {"account_json": "{\"available\": false}"},
+  "guardrails": {"read_only": true, "primary_account_must_belong_to_customer": true}
+}

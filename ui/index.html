@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crown Gateway · Analyst Assist</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--text:#1b1f24;--muted:#5b6672;--line:#e1e5ea;--accent:#2563eb;--teal:#0f9b78;--blue:#3b82f6;--gray:#8b95a1;
+--warn-bg:#fff4e0;--warn:#8a5a00;--ok-bg:#e7f6ef;--ok:#0b6b4f;--err-bg:#fdebeb;--err:#a12626;--chip:#eef1f5}
+@media (prefers-color-scheme:dark){:root{--bg:#14171a;--card:#1d2126;--text:#e8ebef;--muted:#9aa5b1;--line:#2e353d;--accent:#5b8def;--teal:#34c9a2;--blue:#6aa2ff;--gray:#7d8793;
+--warn-bg:#3a2e12;--warn:#f2c46b;--ok-bg:#123327;--ok:#6fdcb5;--err-bg:#3a1a1a;--err:#f29b9b;--chip:#272d34}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:940px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:0 0 10px}
+.sub{color:var(--muted);margin:0 0 16px;font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.row{grid-template-columns:1fr}}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+select,input{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--text);font:inherit}
+button{margin-top:14px;padding:10px 18px;border:0;border-radius:8px;background:var(--accent);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+details{margin-top:12px;font-size:13px}summary{cursor:pointer;color:var(--muted)}
+pre{background:var(--chip);padding:10px;border-radius:8px;overflow:auto;font-size:12px;margin:8px 0 0;white-space:pre-wrap;word-break:break-word}
+.status{color:var(--muted);margin:8px 0}
+.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px}
+@media (max-width:760px){.tiles{grid-template-columns:repeat(2,1fr)}}
+.tile{background:var(--chip);border-radius:8px;padding:10px}
+.tile .v{font-size:19px;font-weight:700}.tile .l{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:6px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{color:var(--muted);font-weight:500;font-size:12px}
+td.ms{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.track{position:relative;height:12px;min-width:120px;background:var(--chip);border-radius:4px}
+.bar{position:absolute;top:0;height:12px;border-radius:4px;min-width:3px}
+.banner{padding:10px 12px;border-radius:8px;margin-bottom:10px;font-size:14px}
+.banner.warn{background:var(--warn-bg);color:var(--warn)}.banner.err{background:var(--err-bg);color:var(--err)}
+.banner.ok{background:var(--ok-bg);color:var(--ok)}
+.msg{font-size:16px;font-weight:600;margin:6px 0 10px}
+.chip{display:inline-block;background:var(--chip);border-radius:99px;padding:2px 10px;margin:0 6px 6px 0;font-size:12px}
+.meta{color:var(--muted);font-size:13px;margin-bottom:8px}
+.lbl{font-size:12px;color:var(--muted);margin:10px 0 4px}
+.legend span{display:inline-block;margin-right:14px;font-size:12px;color:var(--muted)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Crown Gateway · Analyst Assist</h1>
+  <p class="sub">Pick a customer account and a question. The gateway runs RAG, then the transaction and account skills in parallel, then the insights skill, and reports each gRPC duration.</p>
+
+  <div class="card">
+    <div class="row">
+      <div><label for="customer">Customer / account</label><select id="customer"></select></div>
+      <div><label for="question">Input text</label><select id="question"></select></div>
+    </div>
+    <div class="hint" id="hint"></div>
+    <button id="go">Get recommendation</button>
+    <details><summary>Settings</summary>
+      <label for="key" style="margin-top:8px">Gateway API key</label><input id="key" value="dev-key" autocomplete="off">
+    </details>
+  </div>
+
+  <div class="status" id="status"></div>
+  <div id="out"></div>
+</main>
+
+<script>
+const API = "";  // same origin: served by the gateway at "/"
+
+const CUSTOMERS = [
+  {id: "C1001", acct: "ACC-1001-CC", label: "C1001 · ACC-1001-CC · Amazon 49.99 posted twice", q: 0},
+  {id: "C1002", acct: "ACC-1002-CC", label: "C1002 · ACC-1002-CC · Marriott 220.00, one pending", q: 1},
+  {id: "C1003", acct: "ACC-1003-CC", label: "C1003 · ACC-1003-CC · Foreign online charges at night", q: 2},
+  {id: "C1004", acct: "ACC-1004-CC", label: "C1004 · ACC-1004-CC · BestGadgets purchase, no refund", q: 3},
+  {id: "C1005", acct: "ACC-1005-CC", label: "C1005 · ACC-1005-CC · FitLife Gym recurring charges", q: 4},
+];
+const QUESTIONS = [
+  {label: "Charged twice (Amazon 49.99)", text: "Customer says the Amazon transaction of 49.99 was charged twice."},
+  {label: "Charged twice (Marriott 220.00)", text: "Customer says they were charged twice at Marriott for 220.00."},
+  {label: "Did not make this purchase (899.00)", text: "Customer does not recognise the 899.00 charge from GLOBALTECH-STORE and says they did not make it."},
+  {label: "Refund not received (BestGadgets 129.50)", text: "Customer returned an item to BestGadgets about 3 weeks ago for 129.50. The merchant says it was refunded but no credit has appeared."},
+  {label: "Still charged after cancelling (FitLife Gym)", text: "Customer cancelled the FitLife Gym membership 40 days ago but is still being charged 29.99."},
+  {label: "Unrelated question (should go to manual review)", text: "What is the weather today?"},
+];
+const COLORS = {gateway: "var(--gray)", transaction: "var(--teal)", account: "var(--blue)", insights: "var(--accent)"};
+
+const $ = id => document.getElementById(id);
+function h(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined && text !== null) e.textContent = text;
+  return e;
+}
+function add(parent, ...kids) { kids.forEach(k => k && parent.appendChild(k)); return parent; }
+function chips(list) { const w = h("div"); list.forEach(x => w.appendChild(h("span", "chip", x))); return w; }
+
+CUSTOMERS.forEach((c, i) => $("customer").appendChild(new Option(c.label, i)));
+QUESTIONS.forEach((q, i) => $("question").appendChild(new Option(q.label, i)));
+function sync() {
+  const c = CUSTOMERS[$("customer").value];
+  $("question").value = c.q;
+  $("hint").textContent = `customer_id = ${c.id}, account_number = ${c.acct}`;
+}
+$("customer").addEventListener("change", sync);
+sync();
+
+function tile(label, value, sub) {
+  return add(h("div", "tile"), h("div", "v", value), h("div", "l", label + (sub ? " · " + sub : "")));
+}
+
+function renderTiming(d, browserMs) {
+  const t = d.timing, sec = h("section", "card");
+  add(sec, h("h2", null, "Duration"));
+  add(sec, add(h("div", "tiles"),
+    tile("Overall gRPC", t.overall_grpc_ms + " ms", "parallel counted once"),
+    tile("Sum of gRPC calls", t.sum_of_call_ms + " ms", "cumulative"),
+    tile("LLM routing", t.llm_routing_ms + " ms", "Groq, not gRPC"),
+    tile("Gateway total", t.gateway_total_ms + " ms"),
+    tile("Browser round trip", browserMs + " ms")));
+
+  if (d.plan.length) {
+    const txt = d.plan.map((s, i) => `Stage ${i + 1}${s.length > 1 ? " (parallel)" : ""}: ${s.join(" + ")}`).join("  →  ");
+    sec.appendChild(h("div", "meta", "Plan: RAG  →  " + txt));
+  }
+  const calls = t.calls;
+  if (!calls.length) return sec;
+  const end = Math.max(1, ...calls.map(c => c.start_ms + c.ms));
+  const legend = h("div", "legend");
+  Object.keys(COLORS).forEach(k => {
+    const s = h("span"); const dot = h("i", "dot"); dot.style.background = COLORS[k];
+    add(s, dot, document.createTextNode(k)); legend.appendChild(s);
+  });
+  sec.appendChild(legend);
+
+  const table = h("table"), head = h("tr");
+  ["Step", "gRPC call", "start", "ms", "timeline"].forEach(x => head.appendChild(h("th", null, x)));
+  table.appendChild(head);
+  calls.forEach(c => {
+    const track = h("div", "track"), bar = h("div", "bar");
+    bar.style.left = (c.start_ms / end * 100) + "%";
+    bar.style.width = (c.ms / end * 100) + "%";
+    bar.style.background = COLORS[c.skill] || "var(--gray)";
+    track.appendChild(bar);
+    table.appendChild(add(h("tr"), h("td", null, c.call), h("td", null, c.rpc),
+      h("td", "ms", c.start_ms + " ms"), h("td", "ms", c.ms + " ms"), add(h("td"), track)));
+  });
+  sec.appendChild(table);
+  return sec;
+}
+
+function renderSkills(d) {
+  const sec = h("section", "card");
+  add(sec, h("h2", null, "Skills and RAG"));
+  const names = Object.keys(d.skills);
+  if (names.length) {
+    const table = h("table"), head = h("tr");
+    ["Skill", "Version", "Status", "ms", "Detail"].forEach(x => head.appendChild(h("th", null, x)));
+    table.appendChild(head);
+    names.forEach(n => {
+      const s = d.skills[n];
+      const detail = s.error ? s.error : (s.row_count != null ? `${s.row_count} rows · profile ${s.profile}` : "");
+      table.appendChild(add(h("tr"), h("td", null, n), h("td", null, "v" + s.version),
+        h("td", null, s.ok ? "ok" : "failed"), h("td", "ms", s.ms + " ms"), h("td", null, detail)));
+    });
+    sec.appendChild(table);
+  }
+  if (d.rag.sections.length) {
+    add(sec, h("div", "lbl", "SOP sections retrieved for routing (RAG)"));
+    sec.appendChild(chips(d.rag.sections.map(s => `${s.section_id} · ${s.score}`)));
+  }
+  return sec;
+}
+
+function renderResult(r) {
+  const sec = h("section", "card");
+  add(sec, h("h2", null, "Recommendation"));
+  if (r.manual_review) add(sec, h("div", "banner warn", "Manual review: " + (r.manual_review_reason || "")));
+  else add(sec, h("div", "banner ok", "Grounded in SOP and ready for the analyst."));
+  if (r.classification) {
+    const conf = r.confidence != null ? ` · confidence ${Math.round(r.confidence * 100)}%` : "";
+    add(sec, h("div", "meta", "Classification: " + r.classification + conf));
+  }
+  add(sec, h("div", "lbl", "Action message for the analyst"), h("div", "msg", r.analyst_action_message || "-"));
+  if ((r.recommended_actions || []).length) add(sec, h("div", "lbl", "Recommended actions"), chips(r.recommended_actions));
+  if ((r.sop_references || []).length) add(sec, h("div", "lbl", "SOP references"), chips(r.sop_references));
+  if (r.account_context) add(sec, h("div", "lbl", "Account context"), h("div", null, r.account_context));
+  if (r.customer_script) add(sec, h("div", "lbl", "Customer script"), h("div", null, r.customer_script));
+  if ((r.evidence || []).length) {
+    add(sec, h("div", "lbl", "Evidence"));
+    const table = h("table"), head = h("tr");
+    ["Txn", "Detail"].forEach(x => head.appendChild(h("th", null, x)));
+    table.appendChild(head);
+    r.evidence.forEach(e => table.appendChild(add(h("tr"), h("td", null, e.txn_id || ""), h("td", null, e.reason || ""))));
+    sec.appendChild(table);
+  }
+  return sec;
+}
+
+function renderReference(ref) {
+  const sec = h("section", "card");
+  add(sec, h("h2", null, "Account reference (secondary)"));
+  if (!ref || ref.available === false) { sec.appendChild(h("div", "meta", "Account information unavailable.")); return sec; }
+  function block(title, rows, cols) {
+    add(sec, h("div", "lbl", title));
+    if (!rows || !rows.length) { sec.appendChild(h("div", "meta", "None")); return; }
+    const table = h("table"), head = h("tr");
+    cols.forEach(c => head.appendChild(h("th", null, c)));
+    table.appendChild(head);
+    rows.forEach(r => table.appendChild(cols.reduce((tr, c) => add(tr, h("td", null, r[c] == null ? "" : r[c])), h("tr"))));
+    sec.appendChild(table);
+  }
+  block("All accounts", ref.accounts, ["account_number", "account_type", "status", "product_name"]);
+  block("Disputes (incl. fraud)", ref.disputes, ["dispute_id", "account_number", "dispute_type", "status", "amount"]);
+  block("Service requests", ref.requests, ["request_id", "account_number", "request_type", "status"]);
+  return sec;
+}
+
+async function run() {
+  const c = CUSTOMERS[$("customer").value], q = QUESTIONS[$("question").value], out = $("out");
+  out.replaceChildren();
+  $("status").textContent = "Calling gateway…";
+  $("go").disabled = true;
+  const t0 = performance.now();
+  try {
+    const resp = await fetch(API + "/v1/analyst/assist", {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "X-API-Key": $("key").value},
+      body: JSON.stringify({analyst_id: "demo-analyst", customer_id: c.id, account_number: c.acct, text: q.text}),
+    });
+    const browserMs = Math.round(performance.now() - t0);
+    if (!resp.ok) {
+      let detail = ""; try { detail = (await resp.json()).detail; } catch (e) {}
+      throw new Error("HTTP " + resp.status + (detail ? " · " + detail : ""));
+    }
+    const d = await resp.json();
+    add(out, renderTiming(d, browserMs));
+    out.appendChild(h("div", "meta", `Intent: ${d.intent || "-"} · Goal: ${d.goal || "-"} · Correlation id: ${d.correlation_id}`));
+    add(out, renderResult(d.result));
+    if (d.reference) out.appendChild(renderReference(d.reference));
+    out.appendChild(renderSkills(d));
+    const raw = h("details"); add(raw, h("summary", null, "Raw response JSON"), h("pre", null, JSON.stringify(d, null, 2)));
+    out.appendChild(raw);
+  } catch (e) {
+    out.appendChild(h("div", "banner err", "Request failed: " + e.message));
+  } finally {
+    $("status").textContent = "";
+    $("go").disabled = false;
+  }
+}
+$("go").addEventListener("click", run);
+</script>
+</body>
+</html>

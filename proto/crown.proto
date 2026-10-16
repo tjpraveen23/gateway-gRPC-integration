@@ -1,0 +1,56 @@
+syntax = "proto3";
+package crown;
+
+// ---------- Transaction skill tools ----------
+service Text2SqlService { rpc Text2Sql(Text2SqlRequest) returns (Text2SqlResponse); }
+message Text2SqlRequest {
+  string question = 1;
+  string customer_id = 2;
+  string account_number = 3;
+  int32 lookback_days = 4;
+  string feedback = 5;          // validator errors from the previous attempt
+}
+message Text2SqlResponse { string sql = 1; }
+
+service SqlValidatorService { rpc ValidateSql(ValidateSqlRequest) returns (ValidateSqlResponse); }
+message ValidateSqlRequest { string sql = 1; string customer_id = 2; string account_number = 3; }
+message ValidateSqlResponse { bool valid = 1; string sanitized_sql = 2; repeated string errors = 3; }
+
+service SqlExecutorService { rpc ExecuteSql(ExecuteSqlRequest) returns (ExecuteSqlResponse); }
+message ExecuteSqlRequest { string sql = 1; string customer_id = 2; string account_number = 3; }
+message ExecuteSqlResponse { string rows_json = 1; int32 row_count = 2; }
+
+// ---------- Account skill tool (new) ----------
+service AccountService { rpc GetCustomerAccounts(AccountRequest) returns (AccountResponse); }
+message AccountRequest {
+  string customer_id = 1;
+  string account_number = 2;            // primary account; must belong to customer_id
+  repeated string info_types = 3;       // accounts | disputes | requests (empty = all)
+}
+message AccountResponse { string result_json = 1; }
+
+// ---------- SOP retrieval (existing service; used for RAG) ----------
+service SopRetrievalService { rpc RetrieveSop(RetrieveSopRequest) returns (RetrieveSopResponse); }
+message RetrieveSopRequest { string query = 1; int32 top_k = 2; string topic = 3; }
+message SopChunk {
+  string section_id = 1;
+  string title = 2;
+  string text = 3;
+  double score = 4;
+  string doc_version = 5;
+}
+message RetrieveSopResponse { repeated SopChunk chunks = 1; }
+
+// ---------- Insight agent (insights skill) ----------
+service InsightService { rpc Analyze(AnalyzeRequest) returns (AnalyzeResponse); }
+message AnalyzeRequest {
+  string insight_skill = 1;     // skill.md of the insights skill
+  string customer_message = 2;
+  string intent = 3;
+  string goal = 4;
+  string transactions_json = 5;
+  string account_json = 6;      // secondary reference
+  repeated SopChunk sop_chunks = 7;
+  string entities_json = 8;
+}
+message AnalyzeResponse { string result_json = 1; }

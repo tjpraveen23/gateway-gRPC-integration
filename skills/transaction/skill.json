@@ -1,0 +1,87 @@
+{
+  "name": "transaction",
+  "domain": "credit_card",
+  "version": "1.1.0",
+  "version_history": [
+    {"version": "1.0.0", "date": "2026-09-01", "author": "architecture",
+     "changes": "Initial skill: per-intent profiles; text2sql -> validator -> executor"},
+    {"version": "1.1.0", "date": "2026-10-16", "author": "architecture",
+     "changes": "Scope by customer_id + account_number (replaces card_id); runs in parallel with the account skill"}
+  ],
+  "description": "Pulls the credit card transactions of ONE account (purchases, refunds, pending holds, recurring charges) for the time window and shape needed by the detected intent.",
+  "required": true,
+  "requires": [],
+  "intents": [
+    "duplicate_charge", "unauthorized_transaction", "unknown_merchant", "merchant_refund_missing",
+    "recurring_after_cancellation", "incorrect_amount", "pending_hold", "fee_or_interest_dispute",
+    "general_transaction_inquiry"
+  ],
+  "triggers": [
+    "charged twice", "I did not make this purchase", "do not recognise this charge", "refund not received",
+    "still charged after cancelling", "charged the wrong amount", "pending charge", "unexpected fee or interest"
+  ],
+  "inputs": ["customer_id", "account_number", "intent", "text", "entities"],
+  "steps": [
+    {"id": "generate_sql", "call": "Text2SqlService.Text2Sql",
+     "input": {
+       "question": "${profile.data_question}\nAnalyst input text: ${text}\nIntent: ${intent}\nExtracted entities: ${entities_json}",
+       "customer_id": "${customer_id}",
+       "account_number": "${account_number}",
+       "lookback_days": "${profile.lookback_days}",
+       "feedback": "${feedback}"},
+     "save_as": "generated"},
+    {"id": "validate_sql", "call": "SqlValidatorService.ValidateSql",
+     "input": {"sql": "${generated.sql}", "customer_id": "${customer_id}", "account_number": "${account_number}"},
+     "save_as": "validated",
+     "check": {"field": "valid", "retry_from": "generate_sql", "max_attempts": 3,
+               "feedback": "Previous SQL: ${generated.sql}\nValidator errors: ${validated.errors}",
+               "on_fail": "SQL validation failed after 3 attempts: ${validated.errors}"}},
+    {"id": "execute_sql", "call": "SqlExecutorService.ExecuteSql",
+     "input": {"sql": "${validated.sanitized_sql}", "customer_id": "${customer_id}", "account_number": "${account_number}"},
+     "save_as": "result",
+     "fail_if_empty": {"field": "row_count", "reason": "No transactions found for this account in the lookback window"}}
+  ],
+  "outputs": {
+    "transactions_json": "${result.rows_json}",
+    "row_count": "${result.row_count}",
+    "sql": "${validated.sanitized_sql}",
+    "profile": "${profile_name}"
+  },
+  "default_profile": "general_transaction_inquiry",
+  "profile_by_intent": {
+    "duplicate_charge": "duplicate_charge",
+    "unauthorized_transaction": "unauthorized_transaction",
+    "unknown_merchant": "unauthorized_transaction",
+    "merchant_refund_missing": "merchant_refund_missing",
+    "recurring_after_cancellation": "recurring_after_cancellation",
+    "incorrect_amount": "incorrect_amount",
+    "pending_hold": "pending_hold",
+    "fee_or_interest_dispute": "fee_or_interest_dispute",
+    "general_transaction_inquiry": "general_transaction_inquiry"
+  },
+  "profiles": {
+    "duplicate_charge": {"lookback_days": 30,
+      "data_question": "List all transactions in the window (txn_id, merchant, amount, currency, txn_ts, status, auth_code, channel). Return every merchant, not only the one named, so look-alike charges and pending holds can be compared."},
+    "unauthorized_transaction": {"lookback_days": 90,
+      "data_question": "List all transactions in the window (txn_id, merchant, amount, currency, txn_ts, status, channel, country). Include the full window, not only the disputed charge, so spending behaviour (usual country, merchants, amounts, hours) can be compared."},
+    "merchant_refund_missing": {"lookback_days": 60,
+      "data_question": "List purchases and refunds (txn_type PURCHASE and REFUND) in the window with txn_id, merchant, amount, currency, txn_ts, status, txn_type, so the original purchase and any matching credit can be paired."},
+    "recurring_after_cancellation": {"lookback_days": 120,
+      "data_question": "List recurring transactions (is_recurring = 1 or channel = 'RECURRING') in the window with txn_id, merchant, amount, currency, txn_ts, status, so the billing cadence can be analysed."},
+    "incorrect_amount": {"lookback_days": 30,
+      "data_question": "List transactions in the window for the merchant named by the customer (all merchants if none is named) with txn_id, merchant, amount, currency, txn_ts, status, auth_code, so the billed amount can be compared with the amount the customer expected."},
+    "pending_hold": {"lookback_days": 14,
+      "data_question": "List transactions in the window with status PENDING or POSTED (txn_id, merchant, amount, currency, txn_ts, status, auth_code) so pending authorisations can be matched with posted entries by auth_code."},
+    "fee_or_interest_dispute": {"lookback_days": 90,
+      "requires_schema": "txn_type values FEE and INTEREST (not in the demo table)",
+      "data_question": "List transactions where txn_type is FEE or INTEREST, plus the purchases around them (txn_id, merchant, amount, currency, txn_ts, status, txn_type)."},
+    "general_transaction_inquiry": {"lookback_days": 30,
+      "data_question": "List the most recent transactions in the window (txn_id, merchant, amount, currency, txn_ts, status, txn_type, channel, country), newest first."}
+  },
+  "guardrails": {
+    "read_only": true,
+    "required_filters": ["customer_id", "account_number"],
+    "max_rows": 200,
+    "allowed_tables": ["card_transactions"]
+  }
+}

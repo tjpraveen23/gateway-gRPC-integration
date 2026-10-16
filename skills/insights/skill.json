@@ -1,0 +1,29 @@
+{
+  "name": "insights",
+  "domain": "analysis",
+  "version": "1.0.0",
+  "version_history": [
+    {"version": "1.0.0", "date": "2026-10-16", "author": "architecture",
+     "changes": "Initial skill: per-intent rules for duplicate, fraud, refund, recurring, amount, hold, fee; uses transaction + account + SOP context"}
+  ],
+  "description": "Analyses the transaction evidence with SOP policy and account context, and returns the classification, the recommended actions and an analyst action message with SOP references. Select it for any customer issue that needs a recommendation.",
+  "required": true,
+  "requires": ["transaction", "account"],
+  "triggers": ["what should I do", "recommend", "is this a duplicate", "is this fraud", "should I raise a dispute"],
+  "inputs": ["text", "intent", "goal", "transaction.transactions_json", "account.account_json", "sop_chunks"],
+  "steps": [
+    {"id": "analyze", "call": "InsightService.Analyze",
+     "input": {
+       "insight_skill": "${skill_md}",
+       "customer_message": "${text}",
+       "intent": "${intent}",
+       "goal": "${goal}",
+       "transactions_json": "${transaction.transactions_json}",
+       "account_json": "${account.account_json}",
+       "sop_chunks": "${sop_chunks}",
+       "entities_json": "${entities_json}"},
+     "save_as": "analysis", "timeout": 60}
+  ],
+  "outputs": {"insight_json": "${analysis.result_json}"},
+  "guardrails": {"sop_grounded": true, "advisory_only": true, "min_confidence": 0.6}
+}

@@ -1,0 +1,17 @@
+name: unauthorized_transaction
+description: Customer does not recognise or did not make a credit card transaction (possible fraud).
+triggers: [I didn't make this purchase, unrecognised transaction, fraud, unauthorized charge, someone used my card]
+lookback_days: 90
+sop_topic: unauthorized
+sop_query: fraud indicators, immediate actions for unauthorized transactions, provisional credit for fraud, card block and reissue
+data_question: >
+  List this card's transactions for the lookback window (txn_id, merchant, amount, currency, txn_ts,
+  status, channel, country) so the disputed transaction can be compared with normal spending behaviour.
+insight_skill: |
+  Task: assess whether the disputed transaction(s) look fraudulent.
+  1. Identify the disputed transaction(s) from the customer's message and entities (amount, merchant, date).
+  2. Count fraud indicators defined in the SOP (foreign country vs usual, online/card-not-present,
+     unusual hours, first-time merchant, rapid repeated charges, amount far above usual).
+  3. Classify as "likely_fraud", "possible_fraud" or "likely_genuine".
+  Recommend card block, reissue, provisional credit and fraud case only as the SOP allows.
+  Put the disputed txn_ids and the indicators in evidence.

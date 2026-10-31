@@ -1,0 +1,2 @@
+.\tools\run_all.sh
+launch localhost:8000 from browser

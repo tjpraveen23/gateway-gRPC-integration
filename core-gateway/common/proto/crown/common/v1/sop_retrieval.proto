@@ -1,0 +1,14 @@
+syntax = "proto3";
+package crown.common.v1;
+
+// SOP retrieval (RAG). In your environment this is the existing retrieval service over the vector DB.
+service SopRetrievalService { rpc RetrieveSop(RetrieveSopRequest) returns (RetrieveSopResponse); }
+message RetrieveSopRequest { string query = 1; int32 top_k = 2; string topic = 3; }
+message SopChunk {
+  string section_id = 1;
+  string title = 2;
+  string text = 3;
+  double score = 4;
+  string doc_version = 5;
+}
+message RetrieveSopResponse { repeated SopChunk chunks = 1; }

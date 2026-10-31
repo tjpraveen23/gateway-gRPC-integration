@@ -1,0 +1,4 @@
+# core-gateway: platform team owns everything
+*            @bank/platform-team
+/gateway/    @bank/platform-team
+/common/     @bank/platform-team

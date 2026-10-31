@@ -1,0 +1,6 @@
+{
+  "bank.transaction.v1.TransactionService": {"address": "localhost:50057", "env": "TRANSACTION_ADDR"},
+  "bank.account.v1.AccountService": {"address": "localhost:50056", "env": "ACCOUNT_ADDR"},
+  "bank.insight.v1.InsightService": {"address": "localhost:50055", "env": "INSIGHT_ADDR"},
+  "crown.common.v1.SopRetrievalService": {"address": "localhost:50054", "env": "SOP_RETRIEVAL_ADDR"}
+}

@@ -1,0 +1,17 @@
+# Example CI (not run here). core-gateway tests need the skill-repo checked out next to it.
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {path: core-gateway}
+      - uses: actions/checkout@v4
+        with: {repository: bank/skill-repo, path: skill-repo}    # adjust org/name
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r core-gateway/requirements.txt
+      - run: cd core-gateway && make proto
+      - run: git -C core-gateway diff --exit-code registry common/generated   # generated files must be up to date
+      - run: cd core-gateway && make lint && make test

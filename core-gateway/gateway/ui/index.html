@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crown Gateway · Analyst Assist</title>
+
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f4f1ef;
+  --card: #ffffff;
+  --text: #172b4d;
+  --muted: #596579;
+  --line: #e7e2df;
+
+  /* Brand palette from the reference image */
+  --brand-red: #d71927;
+  --brand-yellow: #ffd23f;
+  --surface-warm: #f8f6f5;
+
+  --accent: #c81927;
+  --teal: #087f68;
+  --blue: #2868b2;
+  --gray: #77818e;
+
+  --warn-bg: #fff4df;
+  --warn: #805300;
+  --ok-bg: #e5f5ed;
+  --ok: #126847;
+  --err-bg: #fceaea;
+  --err: #a12626;
+  --chip: #f0eeec;
+
+  --radius: 10px;
+  --control-height: 44px;
+  --shadow: 0 2px 8px rgba(31, 35, 40, 0.045);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.55 Arial, Helvetica, sans-serif;
+}
+
+main {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 24px 48px;
+}
+
+/* Full-width brand header */
+h1 {
+  position: relative;
+  z-index: 0;
+  margin: 0 0 20px;
+  padding: 25px 0 22px;
+  background: var(--brand-red);
+  color: #fff;
+  font-size: clamp(21px, 2.5vw, 27px);
+  font-weight: 700;
+  line-height: 1.35;
+  border-bottom: 5px solid var(--brand-yellow);
+  box-shadow: 0 0 0 100vmax var(--brand-red);
+  clip-path: inset(0 -100vmax);
+}
+
+h2 {
+  margin: 0 0 16px;
+  font-size: 17px;
+  line-height: 1.4;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.sub {
+  margin: 0 0 22px;
+  max-width: 850px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* Main input panel */
+.card {
+  margin-bottom: 18px;
+  padding: 22px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+select,
+input {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--control-height);
+  padding: 10px 12px;
+  border: 1px solid #c9cdd3;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+select:hover,
+input:hover {
+  border-color: #7b8490;
+}
+
+select:focus-visible,
+input:focus-visible,
+button:focus-visible,
+summary:focus-visible {
+  outline: 3px solid rgba(215, 25, 39, 0.25);
+  outline-offset: 2px;
+  border-color: var(--brand-red);
+}
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  margin-top: 18px;
+  padding: 11px 22px;
+  border: 1px solid var(--brand-red);
+  border-radius: 6px;
+  background: var(--brand-red);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 150ms ease, box-shadow 150ms ease;
+}
+
+button:hover:not(:disabled) {
+  background: #b81420;
+  box-shadow: 0 2px 5px rgba(100, 0, 0, 0.14);
+}
+
+button:active:not(:disabled) {
+  background: #a8121c;
+}
+
+button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.hint {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+details {
+  margin-top: 18px;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+
+summary {
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+pre {
+  margin: 10px 0 0;
+  padding: 14px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f7f6f5;
+  color: #29364a;
+  font: 12px/1.6 Consolas, "Courier New", monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.status {
+  margin: 12px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.tile {
+  min-width: 0;
+  padding: 14px 12px;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--brand-red);
+  border-radius: 6px;
+  background: var(--surface-warm);
+}
+
+.tile .v {
+  margin-bottom: 5px;
+  color: var(--text);
+  font-size: clamp(16px, 1.7vw, 21px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.tile .l {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th,
+td {
+  padding: 11px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+th {
+  background: var(--surface-warm);
+  color: #465367;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+tbody tr:hover,
+table tr:hover td {
+  background: #fbf9f8;
+}
+
+td.ms {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.track {
+  position: relative;
+  min-width: 100px;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #e9e6e4;
+}
+
+.bar {
+  position: absolute;
+  top: 0;
+  height: 12px;
+  min-width: 3px;
+  border-radius: 3px;
+}
+
+.banner {
+  margin-bottom: 14px;
+  padding: 13px 15px;
+  border: 1px solid transparent;
+  border-left-width: 4px;
+  border-radius: 5px;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.banner.warn {
+  background: var(--warn-bg);
+  color: var(--warn);
+  border-color: #e7c778;
+}
+
+.banner.err {
+  background: var(--err-bg);
+  color: var(--err);
+  border-color: #e7aaaa;
+}
+
+.banner.ok {
+  background: var(--ok-bg);
+  color: var(--ok);
+  border-color: #9acdb4;
+}
+
+.msg {
+  margin: 7px 0 14px;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.chip {
+  display: inline-block;
+  margin: 0 6px 7px 0;
+  padding: 5px 10px;
+  border: 1px solid #e3deda;
+  border-radius: 5px;
+  background: var(--chip);
+  color: #344257;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  margin-bottom: 12px;
+  color: var(--muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.lbl {
+  margin: 17px 0 7px;
+  color: #465367;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 14px 0;
+}
+
+.legend span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 2px;
+  vertical-align: -1px;
+}
+
+/* Existing skill colors retained for timing visualization */
+:focus-visible {
+  scroll-margin-block: 16px;
+}
+
+/* Tablet */
+@media (max-width: 760px) {
+  main {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tile:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  .card {
+    padding: 18px;
+  }
+
+  table {
+    font-size: 12px;
+  }
+
+  th,
+  td {
+    padding: 9px 7px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 540px) {
+  main {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  h1 {
+    padding-top: 21px;
+    padding-bottom: 17px;
+    font-size: 21px;
+  }
+
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 15px;
+  }
+
+  .card {
+    padding: 15px;
+    margin-bottom: 14px;
+  }
+
+  .sub {
+    font-size: 13px;
+  }
+
+  button {
+    width: 100%;
+  }
+
+  /* Keep dense timing and evidence tables readable on small screens */
+  #out table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  #out table th,
+  #out table td {
+    min-width: 65px;
+  }
+
+  #out table .track {
+    min-width: 100px;
+  }
+
+  .tiles {
+    gap: 8px;
+  }
+
+  .tile {
+    padding: 11px 9px;
+  }
+
+  .tile .v {
+    font-size: 17px;
+  }
+
+  pre {
+    font-size: 11px;
+  }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+</style>
+
+</head>
+<body>
+<main>
+  <h1>Crown Gateway · Analyst Assist</h1>
+  <p class="sub">Pick a customer account and a question. The gateway runs RAG, then the transaction and account skills in parallel, then the insights skill, and reports each gRPC duration.</p>
+
+  <div class="card">
+    <div class="row">
+      <div><label for="customer">Customer / account</label><select id="customer"></select></div>
+      <div><label for="question">Input text</label><select id="question"></select></div>
+    </div>
+    <div class="hint" id="hint"></div>
+    <button id="go">Get recommendation</button>
+    <details><summary>Settings</summary>
+      <label for="key" style="margin-top:8px">Gateway API key</label><input id="key" value="dev-key" autocomplete="off">
+    </details>
+  </div>
+
+  <div class="status" id="status"></div>
+  <div id="out"></div>
+</main>
+
+<script>
+const API = "";  // same origin: served by the gateway at "/"
+
+const CUSTOMERS = [
+  {id: "C1001", acct: "ACC-1001-CC", label: "C1001 · ACC-1001-CC · Amazon 49.99 posted twice", q: 0},
+  {id: "C1002", acct: "ACC-1002-CC", label: "C1002 · ACC-1002-CC · Marriott 220.00, one pending", q: 1},
+  {id: "C1003", acct: "ACC-1003-CC", label: "C1003 · ACC-1003-CC · Foreign online charges at night", q: 2},
+  {id: "C1004", acct: "ACC-1004-CC", label: "C1004 · ACC-1004-CC · BestGadgets purchase, no refund", q: 3},
+  {id: "C1005", acct: "ACC-1005-CC", label: "C1005 · ACC-1005-CC · FitLife Gym recurring charges", q: 4},
+];
+const QUESTIONS = [
+  {label: "Charged twice (Amazon 49.99)", text: "Customer says the Amazon transaction of 49.99 was charged twice."},
+  {label: "Charged twice (Marriott 220.00)", text: "Customer says they were charged twice at Marriott for 220.00."},
+  {label: "Did not make this purchase (899.00)", text: "Customer does not recognise the 899.00 charge from GLOBALTECH-STORE and says they did not make it."},
+  {label: "Refund not received (BestGadgets 129.50)", text: "Customer returned an item to BestGadgets about 3 weeks ago for 129.50. The merchant says it was refunded but no credit has appeared."},
+  {label: "Still charged after cancelling (FitLife Gym)", text: "Customer cancelled the FitLife Gym membership 40 days ago but is still being charged 29.99."},
+  {label: "Unrelated question (should go to manual review)", text: "What is the weather today?"},
+];
+const COLORS = {gateway: "var(--gray)", transaction: "var(--teal)", account: "var(--blue)", insights: "var(--accent)"};
+
+const $ = id => document.getElementById(id);
+function h(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined && text !== null) e.textContent = text;
+  return e;
+}
+function add(parent, ...kids) { kids.forEach(k => k && parent.appendChild(k)); return parent; }
+function chips(list) { const w = h("div"); list.forEach(x => w.appendChild(h("span", "chip", x))); return w; }
+
+CUSTOMERS.forEach((c, i) => $("customer").appendChild(new Option(c.label, i)));
+QUESTIONS.forEach((q, i) => $("question").appendChild(new Option(q.label, i)));
+function sync() {
+  const c = CUSTOMERS[$("customer").value];
+  $("question").value = c.q;
+  $("hint").textContent = `customer_id = ${c.id}, account_number = ${c.acct}`;
+}
+$("customer").addEventListener("change", sync);
+sync();
+
+function tile(label, value, sub) {
+  return add(h("div", "tile"), h("div", "v", value), h("div", "l", label + (sub ? " · " + sub : "")));
+}
+
+function renderTiming(d, browserMs) {
+  const t = d.timing, sec = h("section", "card");
+  add(sec, h("h2", null, "Duration"));
+  add(sec, add(h("div", "tiles"),
+    tile("Overall gRPC", t.overall_grpc_ms + " ms", "parallel counted once"),
+    tile("Sum of gRPC calls", t.sum_of_call_ms + " ms", "cumulative"),
+    tile("LLM routing", t.llm_routing_ms + " ms", "Groq, not gRPC"),
+    tile("Gateway total", t.gateway_total_ms + " ms"),
+    tile("Browser round trip", browserMs + " ms")));
+
+  if (d.plan.length) {
+    const txt = d.plan.map((s, i) => `Stage ${i + 1}${s.length > 1 ? " (parallel)" : ""}: ${s.join(" + ")}`).join("  →  ");
+    sec.appendChild(h("div", "meta", "Plan: RAG  →  " + txt));
+  }
+  const calls = t.calls;
+  if (!calls.length) return sec;
+  const end = Math.max(1, ...calls.map(c => c.start_ms + c.ms));
+  const legend = h("div", "legend");
+  Object.keys(COLORS).forEach(k => {
+    const s = h("span"); const dot = h("i", "dot"); dot.style.background = COLORS[k];
+    add(s, dot, document.createTextNode(k)); legend.appendChild(s);
+  });
+  sec.appendChild(legend);
+
+  const table = h("table"), head = h("tr");
+  ["Step", "gRPC call", "start", "ms", "timeline"].forEach(x => head.appendChild(h("th", null, x)));
+  table.appendChild(head);
+  calls.forEach(c => {
+    const track = h("div", "track"), bar = h("div", "bar");
+    bar.style.left = (c.start_ms / end * 100) + "%";
+    bar.style.width = (c.ms / end * 100) + "%";
+    bar.style.background = COLORS[c.skill] || "var(--gray)";
+    track.appendChild(bar);
+    table.appendChild(add(h("tr"), h("td", null, c.call), h("td", null, c.rpc),
+      h("td", "ms", c.start_ms + " ms"), h("td", "ms", c.ms + " ms"), add(h("td"), track)));
+  });
+  sec.appendChild(table);
+  return sec;
+}
+
+function renderSkills(d) {
+  const sec = h("section", "card");
+  add(sec, h("h2", null, "Skills and RAG"));
+  const names = Object.keys(d.skills);
+  if (names.length) {
+    const table = h("table"), head = h("tr");
+    ["Skill", "Version", "Status", "ms", "Detail"].forEach(x => head.appendChild(h("th", null, x)));
+    table.appendChild(head);
+    names.forEach(n => {
+      const s = d.skills[n];
+      const detail = s.error ? s.error : (s.row_count != null ? `${s.row_count} rows · profile ${s.profile}` : "");
+      table.appendChild(add(h("tr"), h("td", null, n), h("td", null, "v" + s.version),
+        h("td", null, s.ok ? "ok" : "failed"), h("td", "ms", s.ms + " ms"), h("td", null, detail)));
+    });
+    sec.appendChild(table);
+  }
+  if (d.rag.sections.length) {
+    add(sec, h("div", "lbl", "SOP sections retrieved for routing (RAG)"));
+    sec.appendChild(chips(d.rag.sections.map(s => `${s.section_id} · ${s.score}`)));
+  }
+  return sec;
+}
+
+function renderResult(r) {
+  const sec = h("section", "card");
+  add(sec, h("h2", null, "Recommendation"));
+  if (r.manual_review) add(sec, h("div", "banner warn", "Manual review: " + (r.manual_review_reason || "")));
+  else add(sec, h("div", "banner ok", "Grounded in SOP and ready for the analyst."));
+  if (r.classification) {
+    const conf = r.confidence != null ? ` · confidence ${Math.round(r.confidence * 100)}%` : "";
+    add(sec, h("div", "meta", "Classification: " + r.classification + conf));
+  }
+  add(sec, h("div", "lbl", "Action message for the analyst"), h("div", "msg", r.analyst_action_message || "-"));
+  if ((r.recommended_actions || []).length) add(sec, h("div", "lbl", "Recommended actions"), chips(r.recommended_actions));
+  if ((r.sop_references || []).length) add(sec, h("div", "lbl", "SOP references"), chips(r.sop_references));
+  if (r.account_context) add(sec, h("div", "lbl", "Account context"), h("div", null, r.account_context));
+  if (r.customer_script) add(sec, h("div", "lbl", "Customer script"), h("div", null, r.customer_script));
+  if ((r.evidence || []).length) {
+    add(sec, h("div", "lbl", "Evidence"));
+    const table = h("table"), head = h("tr");
+    ["Txn", "Detail"].forEach(x => head.appendChild(h("th", null, x)));
+    table.appendChild(head);
+    r.evidence.forEach(e => table.appendChild(add(h("tr"), h("td", null, e.txn_id || ""), h("td", null, e.reason || ""))));
+    sec.appendChild(table);
+  }
+  return sec;
+}
+
+function renderReference(ref) {
+  const sec = h("section", "card");
+  add(sec, h("h2", null, "Account reference (secondary)"));
+  if (!ref || ref.available === false) { sec.appendChild(h("div", "meta", "Account information unavailable.")); return sec; }
+  function block(title, rows, cols) {
+    add(sec, h("div", "lbl", title));
+    if (!rows || !rows.length) { sec.appendChild(h("div", "meta", "None")); return; }
+    const table = h("table"), head = h("tr");
+    cols.forEach(c => head.appendChild(h("th", null, c)));
+    table.appendChild(head);
+    rows.forEach(r => table.appendChild(cols.reduce((tr, c) => add(tr, h("td", null, r[c] == null ? "" : r[c])), h("tr"))));
+    sec.appendChild(table);
+  }
+  block("All accounts", ref.accounts, ["account_number", "account_type", "status", "product_name"]);
+  block("Disputes (incl. fraud)", ref.disputes, ["dispute_id", "account_number", "dispute_type", "status", "amount"]);
+  block("Service requests", ref.requests, ["request_id", "account_number", "request_type", "status"]);
+  return sec;
+}
+
+async function run() {
+  const c = CUSTOMERS[$("customer").value], q = QUESTIONS[$("question").value], out = $("out");
+  out.replaceChildren();
+  $("status").textContent = "Calling gateway…";
+  $("go").disabled = true;
+  const t0 = performance.now();
+  try {
+    const resp = await fetch(API + "/v1/analyst/assist", {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "X-API-Key": $("key").value},
+      body: JSON.stringify({analyst_id: "demo-analyst", customer_id: c.id, account_number: c.acct, text: q.text}),
+    });
+    const browserMs = Math.round(performance.now() - t0);
+    if (!resp.ok) {
+      let detail = ""; try { detail = (await resp.json()).detail; } catch (e) {}
+      throw new Error("HTTP " + resp.status + (detail ? " · " + detail : ""));
+    }
+    const d = await resp.json();
+    add(out, renderTiming(d, browserMs));
+    out.appendChild(h("div", "meta", `Intent: ${d.intent || "-"} · Goal: ${d.goal || "-"} · Correlation id: ${d.correlation_id}`));
+    add(out, renderResult(d.result));
+    if (d.reference) out.appendChild(renderReference(d.reference));
+    out.appendChild(renderSkills(d));
+    const raw = h("details"); add(raw, h("summary", null, "Raw response JSON"), h("pre", null, JSON.stringify(d, null, 2)));
+    out.appendChild(raw);
+  } catch (e) {
+    out.appendChild(h("div", "banner err", "Request failed: " + e.message));
+  } finally {
+    $("status").textContent = "";
+    $("go").disabled = false;
+  }
+}
+$("go").addEventListener("click", run);
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+syntax = "proto3";
+package crown.common.v1;
+
+// Convention: a skill service that makes its own downstream gRPC calls reports them in a repeated
+// `downstream_calls` field. The gateway merges them into the request timeline (nested under the call).
+message CallTiming {
+  string call = 1;       // short name, e.g. "generate_sql"
+  string rpc = 2;        // "package.Service/Method"
+  int32 start_ms = 3;    // offset from the start of the skill call
+  int32 ms = 4;          // duration
+}

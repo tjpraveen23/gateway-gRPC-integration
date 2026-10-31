@@ -1,0 +1,28 @@
+syntax = "proto3";
+package crown.common.v1;
+
+// Common SQL services, consumed by skill backend services (for example the transaction service).
+service SqlGenerationService { rpc GenerateSql(GenerateSqlRequest) returns (GenerateSqlResponse); }
+message GenerateSqlRequest {
+  string question = 1;
+  string customer_id = 2;
+  string account_number = 3;
+  int32 lookback_days = 4;
+  string feedback = 5;            // validator errors from the previous attempt, empty on the first try
+}
+message GenerateSqlResponse { string sql = 1; }
+
+service SqlValidationService { rpc ValidateSql(ValidateSqlRequest) returns (ValidateSqlResponse); }
+message ValidateSqlRequest { string sql = 1; string customer_id = 2; string account_number = 3; }
+message ValidateSqlResponse {
+  bool valid = 1;
+  string sanitized_sql = 2;       // normalized SQL with LIMIT enforced; empty when invalid
+  repeated string errors = 3;
+}
+
+service SqlExecutionService { rpc ExecuteSql(ExecuteSqlRequest) returns (ExecuteSqlResponse); }
+message ExecuteSqlRequest { string sql = 1; string customer_id = 2; string account_number = 3; }
+message ExecuteSqlResponse {
+  string rows_json = 1;           // JSON array of row objects
+  int32 row_count = 2;
+}

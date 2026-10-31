@@ -1,6 +1,7 @@
 __pycache__/
 .pytest_cache/
 .env
+.venv/
 data/*
 !data/.gitkeep
 # Generated common stubs and registry/descriptors.pb are committed so the repo runs without a build step.

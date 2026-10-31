@@ -1,0 +1,18 @@
+syntax = "proto3";
+package bank.insight.v1;
+import "crown/common/v1/sop_retrieval.proto";
+
+// Insights skill backend. Analyses the evidence with SOP policy and recommends actions.
+service InsightService { rpc Analyze(AnalyzeRequest) returns (AnalyzeResponse); }
+
+message AnalyzeRequest {
+  string insight_skill = 1;         // skill.md of the insights skill
+  string customer_message = 2;
+  string intent = 3;
+  string goal = 4;
+  string transactions_json = 5;     // from the transaction skill
+  string account_json = 6;          // from the account skill (secondary reference)
+  repeated crown.common.v1.SopChunk sop_chunks = 7;
+  string entities_json = 8;
+}
+message AnalyzeResponse { string result_json = 1; }

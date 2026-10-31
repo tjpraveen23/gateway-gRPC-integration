@@ -1,0 +1,18 @@
+# Example CI (not run here). skill-repo needs core-gateway checked out next to it. Add `paths:` filters per skill folder.
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {path: skill-repo}
+      - uses: actions/checkout@v4
+        with: {repository: bank/core-gateway, path: core-gateway}   # adjust org/name
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r skill-repo/requirements.txt
+      - run: cd skill-repo && make proto
+      - run: git -C skill-repo diff --exit-code skills                # generated stubs must be up to date
+      - run: cd core-gateway && make registry                          # registry built from common + these skills
+      - run: cd skill-repo && make lint && make test

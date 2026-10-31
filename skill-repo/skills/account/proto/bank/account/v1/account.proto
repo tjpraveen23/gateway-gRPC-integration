@@ -1,0 +1,12 @@
+syntax = "proto3";
+package bank.account.v1;
+
+// Account skill backend. Secondary reference data for the customer.
+service AccountService { rpc GetCustomerAccounts(GetCustomerAccountsRequest) returns (GetCustomerAccountsResponse); }
+
+message GetCustomerAccountsRequest {
+  string customer_id = 1;
+  string account_number = 2;        // primary account; must belong to customer_id
+  repeated string info_types = 3;   // accounts | disputes | requests (empty = all)
+}
+message GetCustomerAccountsResponse { string result_json = 1; }

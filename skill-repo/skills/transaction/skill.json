@@ -1,0 +1,47 @@
+{
+  "name": "transaction",
+  "domain": "credit_card",
+  "version": "2.0.0",
+  "version_history": [
+    {"version": "1.0.0", "date": "2026-09-01", "author": "architecture", "changes": "Initial skill: per-intent profiles; text2sql -> validator -> executor orchestrated by the gateway"},
+    {"version": "1.1.0", "date": "2026-10-16", "author": "architecture", "changes": "Scope by customer_id + account_number (replaces card_id); runs in parallel with the account skill"},
+    {"version": "2.0.0", "date": "2026-10-24", "author": "architecture", "changes": "Backend service TransactionService owns the profiles and consumes the common SQL generation, validation and execution services; one gateway step"}
+  ],
+  "description": "Pulls the credit card transactions of ONE account (purchases, refunds, pending holds, recurring charges) for the time window and shape needed by the detected intent.",
+  "required": true,
+  "requires": [],
+  "intents": [
+    "duplicate_charge", "unauthorized_transaction", "unknown_merchant", "merchant_refund_missing",
+    "recurring_after_cancellation", "incorrect_amount", "pending_hold", "fee_or_interest_dispute",
+    "general_transaction_inquiry"
+  ],
+  "triggers": [
+    "charged twice", "I did not make this purchase", "do not recognise this charge", "refund not received",
+    "still charged after cancelling", "charged the wrong amount", "pending charge", "unexpected fee or interest"
+  ],
+  "inputs": ["customer_id", "account_number", "intent", "text", "entities"],
+  "service": "bank.transaction.v1.TransactionService",
+  "steps": [
+    {"id": "get_transactions", "call": "bank.transaction.v1.TransactionService/GetTransactions",
+     "input": {
+       "customer_id": "${customer_id}",
+       "account_number": "${account_number}",
+       "intent": "${intent}",
+       "question": "${text}",
+       "entities_json": "${entities_json}"},
+     "save_as": "result", "timeout": 45,
+     "fail_if_empty": {"field": "row_count", "reason": "No transactions found for this account in the lookback window"}}
+  ],
+  "outputs": {
+    "transactions_json": "${result.transactions_json}",
+    "row_count": "${result.row_count}",
+    "sql": "${result.sql}",
+    "profile": "${result.profile}"
+  },
+  "guardrails": {
+    "read_only": true,
+    "required_filters": ["customer_id", "account_number"],
+    "max_rows": 200,
+    "allowed_tables": ["card_transactions"]
+  }
+}

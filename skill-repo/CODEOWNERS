@@ -1,0 +1,4 @@
+# skill-repo: folder -> owning team (example)
+/skills/transaction/   @bank/cards-platform
+/skills/account/       @bank/customer-platform
+/skills/insights/      @bank/ai-platform

@@ -1,0 +1,17 @@
+name: recurring_charge_after_cancellation
+description: Customer cancelled a subscription or membership but is still being charged on the credit card.
+triggers: [still charging me after I cancelled, subscription not cancelled, membership charge after cancellation, recurring payment stop]
+lookback_days: 120
+sop_topic: recurring
+sop_query: charges after cancellation of recurring payments, provisional credit for cancelled subscriptions, stopping recurring payments
+data_question: >
+  List this card's recurring transactions (is_recurring = 1) for the lookback window with txn_id,
+  merchant, amount, currency, txn_ts, status, so the charge cadence can be analysed.
+insight_skill: |
+  Task: determine which recurring charges happened after the customer's cancellation date.
+  1. Extract the cancellation date from the customer message/entities. If it is missing, classify as
+     "needs_manual_review" and ask the analyst to obtain it.
+  2. List the merchant's charges dated after the cancellation date and sum their amounts.
+  3. Classify as "charged_after_cancellation" or "no_charge_after_cancellation".
+  Recommend provisional credit, a dispute and a recurring-payment stop only as the SOP allows
+  (check cycle limits and proof of cancellation requirements).

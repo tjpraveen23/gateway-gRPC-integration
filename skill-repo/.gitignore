@@ -1,0 +1,6 @@
+__pycache__/
+.pytest_cache/
+.env
+# Generated stubs are committed so the repo runs without a build step.
+# To generate them in CI instead, uncomment:
+# skills/*/generated/

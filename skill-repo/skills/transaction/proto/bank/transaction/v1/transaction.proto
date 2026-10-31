@@ -1,0 +1,24 @@
+syntax = "proto3";
+package bank.transaction.v1;
+import "crown/common/v1/timing.proto";
+
+// Transaction skill backend. Pulls the card transactions of ONE account for the analyst's intent.
+// Internally consumes the common SQL generation, validation and execution services.
+service TransactionService { rpc GetTransactions(GetTransactionsRequest) returns (GetTransactionsResponse); }
+
+message GetTransactionsRequest {
+  string customer_id = 1;
+  string account_number = 2;
+  string intent = 3;              // selects the data profile (window and data question)
+  string question = 4;            // the analyst's input text
+  string entities_json = 5;       // extracted entities (amount, merchant, date_hint, ...)
+}
+message GetTransactionsResponse {
+  string transactions_json = 1;   // JSON array of rows
+  int32 row_count = 2;
+  string sql = 3;                 // the validated SQL that was executed (audit)
+  string profile = 4;
+  int32 lookback_days = 5;
+  int32 attempts = 6;             // SQL generation attempts used
+  repeated crown.common.v1.CallTiming downstream_calls = 7;
+}
